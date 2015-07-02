@@ -98,39 +98,6 @@ create table domain_object
 	operator nvarchar(256),
 )
 
-insert into domain_object 
-(name, property_name, operator)
-values
-('Hubski', 'Id', 'int'),			('Hubski', 'Score', 'int'),
-('Hubski', 'Title', 'string'),		('Hubski', 'Subtitle', 'string'),
-('Hubski', 'Author', 'string'),		('Hubski', 'Posted', 'DateTime'),
-('Hubski', 'Url',	'string'),		('Hubski', 'Replies', 'List<Replies>'),
-('Hubski', 'Content', 'string'),	('Hubski', 'Tag1', 'string'),
-('Hubski', 'Tag2', 'string'),
-
-('Hubski-Reply', 'Id', 'int'),			('Hubski-Reply', 'Author', 'string'),
-('Hubski-Reply', 'Content', 'string'),	('Hubski-Reply', 'Replies', 'List<Reply>'),
-('Hubski-Reply', 'Score', 'int')
-
-if exists(select * from sys.objects where name = 'config')
-drop table config
-create table config
-(
-	id bigint identity(1,1),
-	name nvarchar(256),
-	node_command_id bigint,
-	domain_object_id bigint
-)
-
-insert into config 
-(
-	name,
-	node_command_id,
-	domain_object_id
-)
-values 
-('Hubski', 1, 1), ('Hubski-Reply', 3, 11), ('Hubski', 4, 5), ('Hubski', 5, 14), ('Hubski', 6, 10),
-('Hubski', 7, 10), ('Hubski', 2, 3)
 
 
 

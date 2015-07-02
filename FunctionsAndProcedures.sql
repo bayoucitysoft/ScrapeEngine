@@ -59,8 +59,7 @@ begin
 	n.domain_object_name,
 	n.domain_object_property
 	from crawl_sequence c
-	inner join config on config.name = c.config_name
-	inner join node_command n on n.id = config.node_command_id
+	inner join node_command n on n.domain_object_name = c.config_name
 	inner join command_function f with(nolock) on f.id = n.first_cmd_id
 	left outer join command_function f2 with(nolock) on f2.id = n.second_cmd_id
 	where c.id = @crawl_sequence_id
@@ -112,4 +111,9 @@ go
 exec CommandFunctionById 1
 go
 
-select * from command_function
+select * from sys.objects where type = 'u' and is_ms_shipped = 0
+
+select 'node_command', * from node_command
+select 'crawl_sequence', * from crawl_sequence
+select 'command_function', * from command_function
+
