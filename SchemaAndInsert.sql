@@ -100,6 +100,3 @@ create table domain_object
 
 
 
-
-
-

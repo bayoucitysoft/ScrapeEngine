@@ -110,10 +110,91 @@ end
 go
 exec CommandFunctionById 1
 go
+if exists(select * from sys.objects where name = 'CrawlSequenceAndUrl')
+drop procedure CrawlSequenceAndUrl
+go
+create procedure CrawlSequenceAndUrl
+as
+begin
+	select distinct 
+	site_name,
+	site_url
+	from crawl_sequence c
+	where parent_id is null 
+end
+go
+if exists(select * from sys.objects where name = 'CurrentCrawlSequence')
+drop procedure CurrentCrawlSequence 
+go
+create procedure CurrentCrawlSequence
+as
+begin
+	select 
+	site_name
+	from crawl_sequence
+	where is_current = 1 
+end
+go
+exec CurrentCrawlSequence
+go
+if exists(select * from sys.objects where name = 'RetrieveNodeCommands')
+drop procedure RetrieveNodeCommands
+go
+create procedure RetrieveNodeCommands
+as
+begin
+	select 
+	* 
+	from node_command
+end
+go
+if exists(select * from sys.objects where name = 'domain_objects')
+drop view domain_objects 
+go
+create view domain_objects
+as
+select distinct
+domain_object_name,
+domain_object_property
+from node_command
+where domain_object_name is not null 
+and domain_object_property is not null 
+go
+select * from domain_objects
+go
+if exists(select * from sys.objects where name = 'ValidateDomainObject')
+drop procedure ValidateDomainObject 
+go
+create procedure ValidateDomainObject
+(
+	@domain_object_name nvarchar(256),
+	@domain_object_property nvarchar(256)
+)
+as
+begin
+	if not exists(select * from sys.objects where name = @domain_object_name and type = 'u')
+	begin 
+		declare @sql nvarchar(max) = 
+		'
+			create table ' + @domain_object_name + '
+			(
+				id bigint identity(1,1)
+			)
+		'
+		exec(@sql)
+	end
+	if not exists(select * from information_schema.columns where table_name = @domain_object_name and column_name = @domain_object_property)
+	begin 
+		declare @table_sql nvarchar(max) =
+		'
+			alter table ' + @domain_object_name + '
+			add ' + @domain_object_property + ' nvarchar(256) 
+		'
+		exec(@table_sql)
+	end
 
-select * from sys.objects where type = 'u' and is_ms_shipped = 0
+end
 
 select 'node_command', * from node_command
 select 'crawl_sequence', * from crawl_sequence
 select 'command_function', * from command_function
-
