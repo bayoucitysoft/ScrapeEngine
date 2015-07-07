@@ -98,5 +98,71 @@ create table domain_object
 	operator nvarchar(256),
 )
 
+if exists(select * from sys.objects where name = 'LogTable')
+drop table LogTable 
+
+create table LogTable
+(
+	id bigint identity(1,1),
+	object_name nvarchar(256),
+	message nvarchar(256),
+	guid uniqueidentifier default newid()
+)
+
+if exists(select * from sys.objects where name = 'ErrorLog')
+drop table ErrorLog
+
+create table ErrorLog
+(
+	id bigint identity(1,1),
+	error_message nvarchar(max),
+	action_description nvarchar(max),
+	guid uniqueidentifier default newid(),
+	log_table_guid uniqueidentifier 
+)
 
 
+go
+if exists(select * from sys.objects where name = 'LogTableInsert')
+drop procedure LogTableInsert
+go
+create procedure LogTableInsert
+(
+	@object_name nvarchar(256) = null,
+	@message nvarchar(max) = null
+)
+as
+begin
+	insert into LogTable
+	(
+		object_name,
+		message
+	)
+	select
+	@object_name,
+	@message
+end
+go
+if exists(select * from sys.objects where name = 'ErrorLogInsert')
+drop procedure ErrorLogInsert
+go
+create procedure ErrorLogInsert
+(
+	@message nvarchar(max),
+	@action nvarchar(max),
+	@log_table_guid uniqueidentifier = null
+)
+as
+begin 
+	insert into ErrorLog
+	(
+		error_message,
+		action_description,
+		log_table_guid
+	)
+	select 
+	@message,
+	@action,
+	@log_table_guid
+end
+go
