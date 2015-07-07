@@ -32,6 +32,7 @@ namespace ScrapeEngine.Objects
                 CurrentUrl = this.CrawlSequence.SiteUrl;
             if (this.CrawlSequence.InitialNodeCommandId != 0)
                 CurrentCommand = new NodeCommandObject(this.CrawlSequence.InitialNodeCommandId);
+
         }
 
         public void Initailize()
@@ -56,8 +57,47 @@ namespace ScrapeEngine.Objects
                     foreach (HtmlNode node in RootNodes)
                         DomainObjectCollection.Add(NodeCommandRouter.RouteNode(node, CommandCollection));
 
+                if (DomainObjectCollection.Count > 0)
+                {
+                    ValidateSchema();
+                    UploadDomainObject();
+                }
+            }
+        }
 
+        private void ValidateSchema()
+        {
+            foreach (var domainObject in DomainObjectCollection)
+                foreach (var key in domainObject.Keys)
+                {
+                    SQLAccess.Clear();
+                    SQLAccess.Procedure = "ValidateDomainObject";
+                    SQLAccess.Parameters.Add(@"domain_object_name", this.CrawlSequence.ConfigName);
+                    SQLAccess.Parameters.Add(@"domain_object_property", key);
+                    SQLAccess.ExecuteNonQuery();
+                }
+                
+        }
 
+        private void UploadDomainObject()
+        {
+            foreach (var domainObject in DomainObjectCollection)
+            {
+                Guid guid = Guid.NewGuid();
+                foreach (var pair in domainObject)
+                {
+                    SQLAccess.Clear();
+                    SQLAccess.Procedure = "FlattenDomainObject";
+                    SQLAccess.Parameters.Add(@"object_guid", guid);
+                    SQLAccess.Parameters.Add(@"column_name", pair.Key);
+                    SQLAccess.Parameters.Add(@"column_value", pair.Value);
+                    SQLAccess.Parameters.Add(@"table_name", CrawlSequence.ConfigName);
+                    SQLAccess.ExecuteProcedure();
+                }
+                SQLAccess.Clear();
+                SQLAccess.Procedure = "UploadDomainObjectFromCache";
+                SQLAccess.Parameters.Add(@"guid", guid);
+                SQLAccess.ExecuteProcedure();
             }
         }
 

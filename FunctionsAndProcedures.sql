@@ -36,7 +36,6 @@ begin
 	*
 	from crawl_sequence where Id = @crawl_sequence_id
 end
-
 go
 exec NextCrawlSequence 
 go
@@ -192,9 +191,48 @@ begin
 		'
 		exec(@table_sql)
 	end
-
 end
+go
+if exists(select * sys.objects where name = 'FlattenDomainObject')
+drop procedure FlattenDomainObject
+go
+create procedure FlattenDomainObject
+(
+	@object_guid uniqueidentifier,
+	@column_name nvarchar(256),
+	@column_value nvarchar(max),
+	@table_name nvarchar(256)
+)
+as
+begin
+	if not exists(select * from sys.objects where name = 'domain_cache_' + cast(@object_guid as nvarchar(50)))
+	begin 
+		declare @create_cache_table nvarchar(max) =
+		'
+			create table domin_cache_' + cast(@object_guid as nvarchar(50)) + '
+			(
+				id bigint identity(1,1)
+			)
+		'
+		begin try 
+		exec(@create_cache_table)
+
+		end try
+		begin catch
+			
+		end catch	
+	end
+	declare @alter_table_guid nvarchar(max) = 
+	'
+		alter table domain_cache_' + cast(@object_guid as nvarchar(50)) + '
+		add column ' + @column_name + ' nvarchar(1024) 
+	'
+	exec(@alter_cache_table)
+end
+go
 
 select 'node_command', * from node_command
 select 'crawl_sequence', * from crawl_sequence
 select 'command_function', * from command_function
+
+

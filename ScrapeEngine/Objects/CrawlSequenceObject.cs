@@ -50,7 +50,7 @@ namespace ScrapeEngine.Objects
             if (row["initial_node_command_id"] != DBNull.Value)
                 InitialNodeCommandId = (long)row["initial_node_command_id"];
             if (row["config_name"] != DBNull.Value)
-                row["config_name"] = (string)row["config_name"];
+                ConfigName = (string)row["config_name"];
         }
     }
 }
